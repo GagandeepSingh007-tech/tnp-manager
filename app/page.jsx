@@ -31,7 +31,6 @@ export default function PlacementManager() {
     setDrives(updatedDrives);
     localStorage.setItem('tnp_drives', JSON.stringify(updatedDrives));
 
-    // Reset form fields
     setForm({
       companyName: '',
       role: '',
@@ -40,6 +39,12 @@ export default function PlacementManager() {
       minCGPA: '',
       jobType: 'Full-Time',
     });
+  };
+
+  const deleteDrive = (id) => {
+    const updatedDrives = drives.filter((drive) => drive.id !== id);
+    setDrives(updatedDrives);
+    localStorage.setItem('tnp_drives', JSON.stringify(updatedDrives));
   };
 
   return (
@@ -52,6 +57,7 @@ export default function PlacementManager() {
           Track upcoming recruitment drives and company eligibility criteria.
         </p>
 
+        {/* Form */}
         <form
           onSubmit={handleSubmit}
           className="bg-white p-6 rounded-xl shadow-md mb-8 grid grid-cols-1 md:grid-cols-2 gap-4"
@@ -114,6 +120,7 @@ export default function PlacementManager() {
           </div>
         </form>
 
+        {/* Upcoming Drives List */}
         <div className="bg-white p-6 rounded-xl shadow-md">
           <h2 className="text-xl font-bold text-gray-800 mb-4">Upcoming Drives</h2>
           {drives.length === 0 ? (
@@ -129,6 +136,7 @@ export default function PlacementManager() {
                     <th className="p-3">Branch</th>
                     <th className="p-3">Min CGPA</th>
                     <th className="p-3">Type</th>
+                    <th className="p-3 text-right">Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -143,6 +151,14 @@ export default function PlacementManager() {
                         <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">
                           {drive.jobType}
                         </span>
+                      </td>
+                      <td className="p-3 text-right">
+                        <button
+                          onClick={() => deleteDrive(drive.id)}
+                          className="bg-red-500 text-white px-3 py-1 rounded text-xs hover:bg-red-600 transition"
+                        >
+                          Delete
+                        </button>
                       </td>
                     </tr>
                   ))}
