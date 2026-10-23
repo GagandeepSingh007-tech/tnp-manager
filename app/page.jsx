@@ -1,5 +1,4 @@
 'use client';
-
 import { useState, useEffect } from 'react';
 
 export default function PlacementManager() {
@@ -13,40 +12,34 @@ export default function PlacementManager() {
     jobType: 'Full-Time',
   });
 
-  const fetchDrives = async () => {
-    try {
-      const res = await fetch('/api/drives');
-      const data = await res.json();
-      if (Array.isArray(data)) setDrives(data);
-    } catch (err) {
-      console.error('Error fetching drives:', err);
-    }
-  };
-
   useEffect(() => {
-    fetchDrives();
+    const savedDrives = localStorage.getItem('tnp_drives');
+    if (savedDrives) {
+      try {
+        setDrives(JSON.parse(savedDrives));
+      } catch (e) {
+        console.error('Error parsing saved drives', e);
+      }
+    }
   }, []);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    try {
-      await fetch('/api/drives', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
-      });
-      setForm({
-        companyName: '',
-        role: '',
-        driveDate: '',
-        eligibleBranch: '',
-        minCGPA: '',
-        jobType: 'Full-Time',
-      });
-      fetchDrives();
-    } catch (err) {
-      console.error('Error adding drive:', err);
-    }
+    const newDrive = { ...form, id: Date.now() };
+    const updatedDrives = [newDrive, ...drives];
+    
+    setDrives(updatedDrives);
+    localStorage.setItem('tnp_drives', JSON.stringify(updatedDrives));
+
+    // Reset form fields
+    setForm({
+      companyName: '',
+      role: '',
+      driveDate: '',
+      eligibleBranch: '',
+      minCGPA: '',
+      jobType: 'Full-Time',
+    });
   };
 
   return (
@@ -59,7 +52,6 @@ export default function PlacementManager() {
           Track upcoming recruitment drives and company eligibility criteria.
         </p>
 
-        {/* Form */}
         <form
           onSubmit={handleSubmit}
           className="bg-white p-6 rounded-xl shadow-md mb-8 grid grid-cols-1 md:grid-cols-2 gap-4"
@@ -96,8 +88,7 @@ export default function PlacementManager() {
             className="border p-2 rounded"
           />
           <input
-            type="number"
-            step="0.1"
+            type="text"
             placeholder="Min CGPA"
             value={form.minCGPA}
             onChange={(e) => setForm({ ...form, minCGPA: e.target.value })}
@@ -112,55 +103,53 @@ export default function PlacementManager() {
             <option value="Internship">Internship</option>
             <option value="Both">Both</option>
           </select>
-          <button
-            type="submit"
-            className="md:col-span-2 bg-blue-600 text-white p-2 rounded font-semibold hover:bg-blue-700 transition"
-          >
-            Add Placement Drive
-          </button>
+
+          <div className="md:col-span-2">
+            <button
+              type="submit"
+              className="w-full bg-blue-600 text-white p-2 rounded font-semibold hover:bg-blue-700 transition"
+            >
+              Add Placement Drive
+            </button>
+          </div>
         </form>
 
-        {/* Drives Table */}
-        <h2 className="text-xl font-bold text-gray-800 mb-4">Upcoming Drives</h2>
-        <div className="bg-white rounded-xl shadow-md overflow-hidden">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-gray-100 text-gray-700">
-                <th className="p-3">Company</th>
-                <th className="p-3">Role</th>
-                <th className="p-3">Date</th>
-                <th className="p-3">Branch</th>
-                <th className="p-3">Min CGPA</th>
-                <th className="p-3">Type</th>
-              </tr>
-            </thead>
-            <tbody>
-              {drives.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="p-4 text-center text-gray-500">
-                    No placement drives added yet.
-                  </td>
-                </tr>
-              ) : (
-                drives.map((item) => (
-                  <tr key={item.id} className="border-t hover:bg-gray-50">
-                    <td className="p-3 font-medium">{item.companyName}</td>
-                    <td className="p-3">{item.role}</td>
-                    <td className="p-3">
-                      {new Date(item.driveDate).toLocaleDateString()}
-                    </td>
-                    <td className="p-3">{item.eligibleBranch}</td>
-                    <td className="p-3">{item.minCGPA ?? 'N/A'}</td>
-                    <td className="p-3">
-                      <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded font-semibold">
-                        {item.jobType}
-                      </span>
-                    </td>
+        <div className="bg-white p-6 rounded-xl shadow-md">
+          <h2 className="text-xl font-bold text-gray-800 mb-4">Upcoming Drives</h2>
+          {drives.length === 0 ? (
+            <p className="text-gray-500 text-center py-4">No placement drives added yet.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b text-gray-600">
+                    <th className="p-3">Company</th>
+                    <th className="p-3">Role</th>
+                    <th className="p-3">Date</th>
+                    <th className="p-3">Branch</th>
+                    <th className="p-3">Min CGPA</th>
+                    <th className="p-3">Type</th>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                </thead>
+                <tbody>
+                  {drives.map((drive) => (
+                    <tr key={drive.id} className="border-b hover:bg-gray-50">
+                      <td className="p-3 font-medium">{drive.companyName}</td>
+                      <td className="p-3">{drive.role}</td>
+                      <td className="p-3">{drive.driveDate}</td>
+                      <td className="p-3">{drive.eligibleBranch}</td>
+                      <td className="p-3">{drive.minCGPA || 'N/A'}</td>
+                      <td className="p-3">
+                        <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">
+                          {drive.jobType}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
     </main>
